@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -34,8 +35,8 @@ import java.util.concurrent.Executors
 class MainActivity : ComponentActivity() {
 
 
-    private lateinit var outputDirectory: File
-    private lateinit var cameraExecutor: ExecutorService
+    //private lateinit var outputDirectory: File
+    //private lateinit var cameraExecutor: ExecutorService
 
     private var shouldShowCamera = mutableStateOf(false)
 
@@ -58,10 +59,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComposeCameraTheme {
+
                 if (shouldShowCamera.value) {
                     CameraView(
-                        outputDirectory = outputDirectory,
-                        executor = cameraExecutor,
                         onImageCaptured = ::handleImageCapture,
                         onError = { Log.e("kilo", "View error:", it) }
                     )
@@ -77,9 +77,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         requestCameraPermission()
-
-        outputDirectory = getOutputDirectory()
-        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     private fun requestCameraPermission() {
@@ -110,17 +107,8 @@ class MainActivity : ComponentActivity() {
         shouldShowPhoto.value = true
     }
 
-    private fun getOutputDirectory(): File {
-        val mediaDir = externalMediaDirs.firstOrNull()?.let {
-            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
-        }
-
-        return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
     }
 
 }

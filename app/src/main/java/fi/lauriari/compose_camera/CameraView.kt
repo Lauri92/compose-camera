@@ -40,14 +40,13 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
 @Composable
 fun CameraView(
-    outputDirectory: File,
-    executor: Executor,
     onImageCaptured: (Uri) -> Unit,
     onError: (ImageCaptureException) -> Unit
 ) {
@@ -55,6 +54,9 @@ fun CameraView(
     val lensFacing = CameraSelector.LENS_FACING_BACK
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val cameraExecutor = Executors.newSingleThreadExecutor()
+    val outputDirectory = getOutputDirectory(context = context)
 
     val preview = Preview.Builder().build()
     val previewView = remember { PreviewView(context) }
@@ -86,11 +88,9 @@ fun CameraView(
             onClick = {
                 Log.i("kilo", "ON CLICK")
                 takePhoto(
-                    context = context,
-                    filenameFormat = "yyyy-MM-dd-HH-mm-ss-SSS",
                     imageCapture = imageCapture,
                     outputDirectory = outputDirectory,
-                    executor = executor,
+                    executor = cameraExecutor,
                     onImageCaptured = onImageCaptured,
                     onError = onError
                 )
@@ -111,8 +111,6 @@ fun CameraView(
 }
 
 private fun takePhoto(
-    context: Context,
-    filenameFormat: String,
     imageCapture: ImageCapture,
     outputDirectory: File,
     executor: Executor,
@@ -120,12 +118,20 @@ private fun takePhoto(
     onError: (ImageCaptureException) -> Unit,
 ) {
 
+    val filenameFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
+
     val photoFile = File(
         outputDirectory,
         SimpleDateFormat(filenameFormat, Locale.US).format(System.currentTimeMillis()) + ".jpg"
     )
 
-    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+    val outputOptions =
+        ImageCapture
+            .OutputFileOptions
+            .Builder(photoFile)
+            .build()
+
+
 
     imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
         override fun onError(exception: ImageCaptureException) {
@@ -138,11 +144,7 @@ private fun takePhoto(
             val photoUri = Uri.fromFile(photoFile)
             onImageCaptured(photoUri)
 
-            savePhoto(
-                context = context,
-                filenameFormat = filenameFormat,
-                photoUri = photoUri
-            )
+
         }
     })
 }
@@ -150,10 +152,9 @@ private fun takePhoto(
 private fun savePhoto(
     context: Context,
     filenameFormat: String,
-    photoUri: Uri
+    photoUri: Uri,
+    directory: File,
 ) {
-    // Internal app directory where to save the taken photo
-    val directory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
 
     // Where the photo will be saved and the name with extension appended to file name
     val photoPath = File(
@@ -203,3 +204,16 @@ private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
             }, ContextCompat.getMainExecutor(this))
         }
     }
+
+private fun getOutputDirectory(context: Context): File {
+    /*
+    val mediaDir = context.getActivity()?.externalMediaDirs?.firstOrNull()?.let {
+        File(it, context.resources.getString(R.string.app_name)).apply { mkdirs() }
+    }
+
+    return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
+
+     */
+    // Internal app directory where to save the taken photo
+    return context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
+}
