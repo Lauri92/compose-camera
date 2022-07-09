@@ -1,9 +1,10 @@
 package fi.lauriari.compose_camera
 
 import android.content.Context
-import android.content.ContextWrapper
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.CameraSelector
@@ -134,27 +135,46 @@ private fun takePhoto(
 
         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
 
-            val cw = ContextWrapper(context.applicationContext)
+            // Internal app directory wehere to save the taken photo
+            val directory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
 
-            val directory = cw.getDir("imageDir", Context.MODE_PRIVATE)
+            // Where the photo will be saved and the name with extension appended to file name
+            val photoPath = File(
+                directory,
+                SimpleDateFormat(
+                    filenameFormat,
+                    Locale.getDefault()
+                ).format(System.currentTimeMillis()) + ".jpg"
+            )
 
-            val mypath = File(directory,  SimpleDateFormat(filenameFormat, Locale.US).format(System.currentTimeMillis()) + ".jpg")
+            val fos = FileOutputStream(photoPath)
 
-            var fos: FileOutputStream? = null
+            val photoUri = Uri.fromFile(photoFile)
+            onImageCaptured(photoUri)
 
-            val savedUri = Uri.fromFile(photoFile)
-            onImageCaptured(savedUri)
-
+            // Convert URI to Bitmap
             try {
-                fos = FileOutputStream(mypath)
-                val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, savedUri)
+                // For API level > 28
+                val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    ImageDecoder.decodeBitmap(
+                        ImageDecoder.createSource(
+                            context.contentResolver,
+                            photoUri
+                        )
+                    )
+                } else {
+                    // Below API level 29
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, photoUri)
+                }
+
+                // Write image to the OutputStream
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos)
 
             } catch (exception: Exception) {
                 exception.printStackTrace()
             } finally {
                 try {
-                    fos!!.close()
+                    fos.close()
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
