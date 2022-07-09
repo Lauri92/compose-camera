@@ -135,52 +135,64 @@ private fun takePhoto(
 
         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
 
-            // Internal app directory wehere to save the taken photo
-            val directory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
-
-            // Where the photo will be saved and the name with extension appended to file name
-            val photoPath = File(
-                directory,
-                SimpleDateFormat(
-                    filenameFormat,
-                    Locale.getDefault()
-                ).format(System.currentTimeMillis()) + ".jpg"
-            )
-
-            val fos = FileOutputStream(photoPath)
-
             val photoUri = Uri.fromFile(photoFile)
             onImageCaptured(photoUri)
 
-            // Convert URI to Bitmap
-            try {
-                // For API level > 28
-                val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    ImageDecoder.decodeBitmap(
-                        ImageDecoder.createSource(
-                            context.contentResolver,
-                            photoUri
-                        )
-                    )
-                } else {
-                    // Below API level 29
-                    MediaStore.Images.Media.getBitmap(context.contentResolver, photoUri)
-                }
-
-                // Write image to the OutputStream
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos)
-
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-            } finally {
-                try {
-                    fos.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
+            savePhoto(
+                context = context,
+                filenameFormat = filenameFormat,
+                photoUri = photoUri
+            )
         }
     })
+}
+
+private fun savePhoto(
+    context: Context,
+    filenameFormat: String,
+    photoUri: Uri
+) {
+    // Internal app directory where to save the taken photo
+    val directory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
+
+    // Where the photo will be saved and the name with extension appended to file name
+    val photoPath = File(
+        directory,
+        SimpleDateFormat(
+            filenameFormat,
+            Locale.getDefault()
+        ).format(System.currentTimeMillis()) + ".jpg"
+    )
+
+    val fos = FileOutputStream(photoPath)
+
+    // Convert URI to Bitmap
+    try {
+        // For API level > 28
+        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ImageDecoder.decodeBitmap(
+                ImageDecoder.createSource(
+                    context.contentResolver,
+                    photoUri
+                )
+            )
+        } else {
+            // Below API level 29
+            MediaStore.Images.Media.getBitmap(context.contentResolver, photoUri)
+        }
+
+        // Write image to the OutputStream
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos)
+
+    } catch (exception: Exception) {
+        exception.printStackTrace()
+    } finally {
+        try {
+            fos.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
 }
 
 private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
