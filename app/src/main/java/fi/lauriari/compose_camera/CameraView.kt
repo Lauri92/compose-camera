@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import fi.lauriari.compose_camera.context_extensions.getCameraProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -142,20 +143,8 @@ private fun takePhoto(
         }
 
         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-
             val photoUri = Uri.fromFile(photoFile)
             onImageCaptured(photoUri)
-
-
         }
     })
 }
-
-private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
-    suspendCoroutine { continuation ->
-        ProcessCameraProvider.getInstance(this).also { cameraProvider ->
-            cameraProvider.addListener({
-                continuation.resume(cameraProvider.get())
-            }, ContextCompat.getMainExecutor(this))
-        }
-    }
