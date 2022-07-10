@@ -34,10 +34,6 @@ import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
 
-
-    //private lateinit var outputDirectory: File
-    //private lateinit var cameraExecutor: ExecutorService
-
     private var shouldShowCamera = mutableStateOf(false)
 
     private lateinit var photoUri: Uri
@@ -106,11 +102,6 @@ class MainActivity : ComponentActivity() {
         photoUri = uri
         shouldShowPhoto.value = true
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
 }
 
 
