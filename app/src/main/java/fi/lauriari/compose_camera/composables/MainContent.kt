@@ -9,7 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.*
 import fi.lauriari.compose_camera.permissions.HandleRequest
@@ -22,9 +24,12 @@ fun MainContent(
 ) {
     val permissionState = rememberPermissionState(permission)
 
-    val shouldShowCamera = rememberSaveable { mutableStateOf(false) }
-    val shouldShowPhoto = rememberSaveable { mutableStateOf(false) }
-    var photoUri: Uri? = null
+    val config = LocalConfiguration.current
+    config.smallestScreenWidthDp
+
+    var shouldShowCamera by rememberSaveable { mutableStateOf(false) }
+    var shouldShowPhoto by rememberSaveable { mutableStateOf(false) }
+    var photoUri by rememberSaveable { mutableStateOf("".toUri()) }
 
     HandleRequest(
         permissionState = permissionState,
@@ -36,24 +41,30 @@ fun MainContent(
             )
         },
         content = {
-            if (shouldShowCamera.value) {
+            if (shouldShowCamera) {
                 CameraView(
                     onImageCaptured = { capturedPhotoUri ->
-                        shouldShowCamera.value = false
-                        shouldShowPhoto.value = true
+                        shouldShowCamera = false
+                        shouldShowPhoto = true
                         photoUri = capturedPhotoUri
                     },
                     onError = {
-                        shouldShowCamera.value = false
+                        shouldShowCamera = false
                     })
-            } else if (shouldShowPhoto.value) {
+            } else if (shouldShowPhoto) {
                 ShowPhotoAndButton(
-                    shouldShowCamera = shouldShowCamera,
-                    shouldShowPhoto = shouldShowPhoto,
+                    onClick = {
+                        shouldShowCamera = true
+                        shouldShowPhoto = false
+                    },
                     photoUri = photoUri
                 )
             } else {
-                ShowButton(shouldShowCamera = shouldShowCamera)
+                ShowButton(
+                    onClick = {
+                        shouldShowCamera = true
+                    }
+                )
             }
         }
     )
@@ -61,12 +72,13 @@ fun MainContent(
 
 @Composable
 fun ShowPhotoAndButton(
-    shouldShowCamera: MutableState<Boolean>,
-    shouldShowPhoto: MutableState<Boolean>,
-    photoUri: Uri?
+    onClick: () -> Unit,
+    photoUri: Uri?,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
         Image(
             painter = rememberAsyncImagePainter(photoUri),
@@ -80,10 +92,8 @@ fun ShowPhotoAndButton(
             horizontalArrangement = Arrangement.Center
         ) {
             Button(
-                onClick = {
-                    shouldShowCamera.value = true
-                    shouldShowPhoto.value = false
-                })
+                onClick = onClick
+            )
             {
                 Text("Toggle Camera")
             }
@@ -92,15 +102,14 @@ fun ShowPhotoAndButton(
 }
 
 @Composable
-fun ShowButton(shouldShowCamera: MutableState<Boolean>) {
+fun ShowButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = {
-                shouldShowCamera.value = true
-            })
+            onClick = onClick
+        )
         {
             Text("Toggle Camera")
         }
