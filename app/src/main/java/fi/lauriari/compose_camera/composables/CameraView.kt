@@ -56,9 +56,15 @@ fun CameraView(
     // Internal app directory where to save the taken photo
     val outputDirectory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
 
-    val preview = Preview.Builder().build()
+    val preview = Preview.Builder()
+        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+        .build()
     val previewView = remember { PreviewView(context) }
-    val imageCapture: ImageCapture = remember { ImageCapture.Builder().build() }
+    val imageCapture: ImageCapture =
+        remember {
+            ImageCapture.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+        }
     val cameraSelector = CameraSelector.Builder()
         .requireLensFacing(lensFacing)
         .build()
@@ -77,7 +83,7 @@ fun CameraView(
     }
 
     val minZoom = 1.0f
-    val maxZoom = 2.5f
+    val maxZoom = 4.5f
     var zoom by remember { mutableStateOf(1f) }
 
     Box(
@@ -99,7 +105,7 @@ fun CameraView(
                         zoom = if (newZoomLevel in minZoom..maxZoom) {
                             newZoomLevel
                         } else {
-                            if (zoom * gestureZoom < 1) 1f else 2.5f
+                            if (zoom * gestureZoom < minZoom) minZoom else maxZoom
                         }
                     }
                 )
@@ -123,7 +129,7 @@ fun CameraView(
                     contentDescription = "Take picture",
                     tint = Color.White,
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(75.dp)
                         .padding(1.dp)
                         .border(1.dp, Color.White, CircleShape)
                 )
