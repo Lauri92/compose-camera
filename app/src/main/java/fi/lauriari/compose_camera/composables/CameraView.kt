@@ -3,29 +3,30 @@ package fi.lauriari.compose_camera.composables
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import android.view.ScaleGestureDetector
+import android.widget.Toast
+import androidx.camera.core.*
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.sharp.Lens
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import fi.lauriari.compose_camera.context_extensions.getCameraProvider
@@ -34,6 +35,10 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 
 @Composable
@@ -71,9 +76,39 @@ fun CameraView(
         preview.setSurfaceProvider(previewView.surfaceProvider)
     }
 
+
     // 3
-    Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.fillMaxSize()) {
-        AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        var angle by remember { mutableStateOf(0f) }
+        var zoom by remember { mutableStateOf(1f) }
+        var offsetX by remember { mutableStateOf(0f) }
+        var offsetY by remember { mutableStateOf(0f) }
+        AndroidView({ previewView }, modifier = Modifier
+            .fillMaxSize()
+            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+            .graphicsLayer(
+                scaleX = zoom,
+                scaleY = zoom,
+                rotationZ = angle
+            )
+            .pointerInput(Unit) {
+                detectTransformGestures(
+                    onGesture = { _, pan, gestureZoom, gestureRotate ->
+                        Log.d("transformtest", "something panned")
+                        angle += gestureRotate
+                        zoom *= gestureZoom
+                        val x = pan.x * zoom
+                        val y = pan.y * zoom
+                        val angleRad = angle * PI / 180.0
+                        offsetX += (x * cos(angleRad) - y * sin(angleRad)).toFloat()
+                        offsetY += (x * sin(angleRad) + y * cos(angleRad)).toFloat()
+                    }
+                )
+            })
 
         IconButton(
             modifier = Modifier.padding(bottom = 20.dp),
