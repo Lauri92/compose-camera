@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.ScaleGestureDetector
 import android.widget.Toast
 import androidx.camera.core.*
+import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,8 +47,12 @@ fun CameraView(
     onImageCaptured: (Uri) -> Unit,
     onError: (ImageCaptureException) -> Unit
 ) {
-
+    // Which lens should be used
     val lensFacing = CameraSelector.LENS_FACING_BACK
+
+    // Image quality, range [1..100]
+    val imageQuality = 50
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -56,15 +61,27 @@ fun CameraView(
     // Internal app directory where to save the taken photo
     val outputDirectory = context.applicationContext.getDir("imageDir", Context.MODE_PRIVATE)
 
+    val cameraController = LifecycleCameraController(context)
+    cameraController.bindToLifecycle(lifecycleOwner)
+
+    // Camera preview displayed on screen
+    // TODO: Set aspect ratio to 16:9?
     val preview = Preview.Builder()
-        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build()
     val previewView = remember { PreviewView(context) }
+    previewView.scaleType = PreviewView.ScaleType.FIT_CENTER
+    previewView.controller = cameraController
+
+    // Builder for captured image
+    // TODO: Set aspect ratio to 16:9?
     val imageCapture: ImageCapture =
         remember {
             ImageCapture.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_16_9).build()
+                .setJpegQuality(imageQuality)
+                .build()
         }
+
+    // Which lens should be used
     val cameraSelector = CameraSelector.Builder()
         .requireLensFacing(lensFacing)
         .build()
@@ -82,39 +99,20 @@ fun CameraView(
         preview.setSurfaceProvider(previewView.surfaceProvider)
     }
 
-    val minZoom = 1.0f
-    val maxZoom = 4.5f
-    var zoom by remember { mutableStateOf(1f) }
-
     Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
     ) {
 
-        AndroidView({ previewView }, modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer(
-                scaleX = zoom,
-                scaleY = zoom
-            )
-            .pointerInput(Unit) {
-                detectTransformGestures(
-                    onGesture = { _, _, gestureZoom, _ ->
-                        val newZoomLevel = gestureZoom * zoom
-                        zoom = if (newZoomLevel in minZoom..maxZoom) {
-                            newZoomLevel
-                        } else {
-                            if (zoom * gestureZoom < minZoom) minZoom else maxZoom
-                        }
-                    }
-                )
-            })
+        AndroidView(
+            { previewView }, modifier = Modifier
+                .fillMaxSize()
+        )
 
         IconButton(
             modifier = Modifier.padding(bottom = 20.dp),
             onClick = {
-                Log.i("kilo", "ON CLICK")
                 takePhoto(
                     imageCapture = imageCapture,
                     outputDirectory = outputDirectory,
@@ -150,7 +148,10 @@ private fun takePhoto(
 
     val photoFile = File(
         outputDirectory,
-        SimpleDateFormat(filenameFormat, Locale.US).format(System.currentTimeMillis()) + ".jpg"
+        SimpleDateFormat(
+            filenameFormat,
+            Locale.getDefault()
+        ).format(System.currentTimeMillis()) + ".jpg"
     )
 
     val outputOptions =
