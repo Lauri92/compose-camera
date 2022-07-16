@@ -46,7 +46,7 @@ fun CameraView(
     onImageCaptured: (Uri) -> Unit,
     onError: (ImageCaptureException) -> Unit
 ) {
-    // 1
+
     val lensFacing = CameraSelector.LENS_FACING_BACK
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -63,7 +63,7 @@ fun CameraView(
         .requireLensFacing(lensFacing)
         .build()
 
-    // 2
+
     LaunchedEffect(lensFacing) {
         val cameraProvider = context.getCameraProvider()
         cameraProvider.unbindAll()
@@ -76,36 +76,31 @@ fun CameraView(
         preview.setSurfaceProvider(previewView.surfaceProvider)
     }
 
+    val minZoom = 1.0f
+    val maxZoom = 2.5f
+    var zoom by remember { mutableStateOf(1f) }
 
-    // 3
     Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        var angle by remember { mutableStateOf(0f) }
-        var zoom by remember { mutableStateOf(1f) }
-        var offsetX by remember { mutableStateOf(0f) }
-        var offsetY by remember { mutableStateOf(0f) }
+
         AndroidView({ previewView }, modifier = Modifier
             .fillMaxSize()
-            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
             .graphicsLayer(
                 scaleX = zoom,
-                scaleY = zoom,
-                rotationZ = angle
+                scaleY = zoom
             )
             .pointerInput(Unit) {
                 detectTransformGestures(
-                    onGesture = { _, pan, gestureZoom, gestureRotate ->
-                        Log.d("transformtest", "something panned")
-                        angle += gestureRotate
-                        zoom *= gestureZoom
-                        val x = pan.x * zoom
-                        val y = pan.y * zoom
-                        val angleRad = angle * PI / 180.0
-                        offsetX += (x * cos(angleRad) - y * sin(angleRad)).toFloat()
-                        offsetY += (x * sin(angleRad) + y * cos(angleRad)).toFloat()
+                    onGesture = { _, _, gestureZoom, _ ->
+                        val newZoomLevel = gestureZoom * zoom
+                        zoom = if (newZoomLevel in minZoom..maxZoom) {
+                            newZoomLevel
+                        } else {
+                            if (zoom * gestureZoom < 1) 1f else 2.5f
+                        }
                     }
                 )
             })
