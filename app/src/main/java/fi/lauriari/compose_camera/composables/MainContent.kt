@@ -35,10 +35,6 @@ fun MainContent(
 ) {
     val permissionState = rememberPermissionState(permission)
 
-    val config = LocalConfiguration.current
-    config.smallestScreenWidthDp
-    val context = LocalContext.current
-
     var shouldShowCamera by rememberSaveable { mutableStateOf(false) }
     var shouldShowPhoto by rememberSaveable { mutableStateOf(false) }
     var shouldShowImageList by rememberSaveable { mutableStateOf(false) }
@@ -92,8 +88,6 @@ fun ShowPhotoAndButton(
     onClick: () -> Unit,
     photoUri: Uri?,
 ) {
-
-    Log.d("photouritest", photoUri.toString())
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -150,7 +144,7 @@ fun ShowButton(
             }
         }
 
-        if (shouldShowImageList) {
+        AnimatedVisibility(visible = shouldShowImageList) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
