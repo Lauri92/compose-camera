@@ -3,31 +3,23 @@ package fi.lauriari.compose_camera.composables
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import android.view.ScaleGestureDetector
-import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.sharp.ArrowBack
 import androidx.compose.material.icons.sharp.Lens
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import fi.lauriari.compose_camera.context_extensions.getCameraProvider
@@ -36,16 +28,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
 
 
 @Composable
 fun CameraView(
     onImageCaptured: (Uri) -> Unit,
-    onError: (ImageCaptureException) -> Unit
+    onError: (ImageCaptureException) -> Unit,
+    onBackPressed: () -> Unit
 ) {
     // Which lens should be used
     val lensFacing = CameraSelector.LENS_FACING_BACK
@@ -102,7 +91,6 @@ fun CameraView(
     Box(
         modifier = Modifier
             .fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter,
     ) {
 
         AndroidView(
@@ -110,18 +98,42 @@ fun CameraView(
                 .fillMaxSize()
         )
 
-        IconButton(
-            modifier = Modifier.padding(bottom = 20.dp),
-            onClick = {
-                takePhoto(
-                    imageCapture = imageCapture,
-                    outputDirectory = outputDirectory,
-                    executor = cameraExecutor,
-                    onImageCaptured = onImageCaptured,
-                    onError = onError
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
+            contentAlignment = Alignment.TopStart
+        ) {
+            IconButton(
+                modifier = Modifier.padding(top = 16.dp),
+                onClick = onBackPressed
+            ) {
+                Icon(
+                    imageVector = Icons.Sharp.ArrowBack,
+                    contentDescription = "Take picture",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .padding(1.dp)
                 )
-            },
-            content = {
+            }
+        }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            IconButton(
+                modifier = Modifier.padding(bottom = 20.dp),
+                onClick = {
+                    takePhoto(
+                        imageCapture = imageCapture,
+                        outputDirectory = outputDirectory,
+                        executor = cameraExecutor,
+                        onImageCaptured = onImageCaptured,
+                        onError = onError
+                    )
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Sharp.Lens,
                     contentDescription = "Take picture",
@@ -132,7 +144,7 @@ fun CameraView(
                         .border(1.dp, Color.White, CircleShape)
                 )
             }
-        )
+        }
     }
 }
 

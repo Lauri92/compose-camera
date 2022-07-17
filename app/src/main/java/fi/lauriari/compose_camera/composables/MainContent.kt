@@ -19,7 +19,7 @@ fun MainContent(
 ) {
     val permissionState = rememberPermissionState(permission)
 
-    var shouldShowCamera by rememberSaveable { mutableStateOf(false) }
+    var shouldShowCamera by rememberSaveable { mutableStateOf(true) }
     var shouldShowImageList by rememberSaveable { mutableStateOf(false) }
     var photoUri by rememberSaveable { mutableStateOf("".toUri()) }
 
@@ -42,6 +42,9 @@ fun MainContent(
                         photoUri = capturedPhotoUri
                     },
                     onError = {
+                        shouldShowCamera = false
+                    },
+                    onBackPressed = {
                         shouldShowCamera = false
                     })
             } else {
