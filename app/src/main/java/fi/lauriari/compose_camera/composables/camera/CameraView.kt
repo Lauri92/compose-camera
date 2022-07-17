@@ -26,8 +26,10 @@ fun CameraView(
     onError: (ImageCaptureException) -> Unit,
     onBackPressed: () -> Unit
 ) {
+    Log.d("cameratrace", "Before value change")
     // Which lens should be used
-    val lensFacing = CameraSelector.LENS_FACING_BACK
+    var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+
 
     // Image quality, range [1..100]
     val imageQuality = 50
@@ -47,9 +49,12 @@ fun CameraView(
     // TODO: Set aspect ratio to 16:9?
     val preview = Preview.Builder()
         .build()
-    val previewView = remember { PreviewView(context) }
-    previewView.scaleType = PreviewView.ScaleType.FIT_CENTER
-    previewView.controller = cameraController
+    val previewView = remember {
+        PreviewView(context).also {
+            it.scaleType = PreviewView.ScaleType.FIT_CENTER
+            it.controller = cameraController
+        }
+    }
 
     // Builder for captured image
     // TODO: Set aspect ratio to 16:9?
@@ -99,6 +104,13 @@ fun CameraView(
                     onImageCaptured = onImageCaptured,
                     onError = onError
                 )
+            },
+            switchLens = {
+                lensFacing = if (CameraSelector.LENS_FACING_FRONT == lensFacing) {
+                    CameraSelector.LENS_FACING_BACK
+                } else {
+                    CameraSelector.LENS_FACING_FRONT
+                }
             }
         )
     }
