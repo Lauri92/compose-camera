@@ -1,4 +1,4 @@
-package fi.lauriari.compose_camera.composables
+package fi.lauriari.compose_camera.composables.camera
 
 import android.content.Context
 import android.net.Uri
@@ -6,21 +6,11 @@ import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.sharp.ArrowBack
-import androidx.compose.material.icons.sharp.Lens
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import fi.lauriari.compose_camera.context_extensions.getCameraProvider
 import java.io.File
@@ -98,53 +88,19 @@ fun CameraView(
                 .fillMaxSize()
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            contentAlignment = Alignment.TopStart
-        ) {
-            IconButton(
-                modifier = Modifier.padding(top = 16.dp),
-                onClick = onBackPressed
-            ) {
-                Icon(
-                    imageVector = Icons.Sharp.ArrowBack,
-                    contentDescription = "Take picture",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .padding(1.dp)
-                )
-            }
-        }
+        CameraBackButton(onBackPressed = onBackPressed)
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            IconButton(
-                modifier = Modifier.padding(bottom = 20.dp),
-                onClick = {
-                    takePhoto(
-                        imageCapture = imageCapture,
-                        outputDirectory = outputDirectory,
-                        executor = cameraExecutor,
-                        onImageCaptured = onImageCaptured,
-                        onError = onError
-                    )
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Sharp.Lens,
-                    contentDescription = "Take picture",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(75.dp)
-                        .padding(1.dp)
-                        .border(1.dp, Color.White, CircleShape)
+        CameraBottomRow(
+            takePhoto = {
+                takePhoto(
+                    imageCapture = imageCapture,
+                    outputDirectory = outputDirectory,
+                    executor = cameraExecutor,
+                    onImageCaptured = onImageCaptured,
+                    onError = onError
                 )
             }
-        }
+        )
     }
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import fi.lauriari.compose_camera.composables.camera.CameraView
 import fi.lauriari.compose_camera.permissions.HandleRequest
 import fi.lauriari.compose_camera.permissions.PermissionDeniedContent
 
