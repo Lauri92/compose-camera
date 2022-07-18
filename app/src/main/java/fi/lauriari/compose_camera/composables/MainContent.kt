@@ -1,6 +1,6 @@
 package fi.lauriari.compose_camera.composables
 
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,8 +23,7 @@ fun MainContent(
     var shouldShowCamera by rememberSaveable { mutableStateOf(false) }
     var shouldShowImageList by rememberSaveable { mutableStateOf(false) }
     var photoUri by rememberSaveable { mutableStateOf("".toUri()) }
-
-    val imagesScrollState = rememberScrollState()
+    val imageListState = rememberLazyListState()
 
     HandleRequest(
         permissionState = permissionState,
@@ -54,7 +53,7 @@ fun MainContent(
                     onToggleImagesClick = { shouldShowImageList = !shouldShowImageList },
                     shouldShowImageList = shouldShowImageList,
                     photoUri = photoUri,
-                    imagesScrollState = imagesScrollState
+                    imageListState = imageListState
                 )
             }
         }

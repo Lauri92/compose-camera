@@ -2,15 +2,20 @@ package fi.lauriari.compose_camera.composables
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,10 +32,13 @@ fun MainView(
     onToggleImagesClick: () -> Unit,
     shouldShowImageList: Boolean,
     photoUri: Uri,
-    imagesScrollState: ScrollState
+    imageListState: LazyListState
 ) {
 
     val context = LocalContext.current
+
+    val imageDir: File = context.getDir("imageDir", Context.MODE_PRIVATE).absoluteFile
+    val imageList = imageDir.list()
 
     Column(
         modifier = Modifier
@@ -47,29 +55,26 @@ fun MainView(
                 .fillMaxWidth()
                 .height(400.dp)
         )
-        AnimatedVisibility(visible = shouldShowImageList) {
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(imagesScrollState)
-            ) {
-                val imageDir: File = context.getDir("imageDir", Context.MODE_PRIVATE).absoluteFile
 
-                for (uri in imageDir.list()!!) {
-                    Box(
+        AnimatedVisibility(visible = shouldShowImageList) {
+            LazyRow(
+                modifier = Modifier.padding(20.dp),
+                state = imageListState
+            ) {
+                items(imageList) { uri ->
+                    Image(
                         modifier = Modifier
-                            .size(250.dp)
-                            .padding(20.dp)
+                            .size(150.dp)
                             .clickable {
                                 val file = File(imageDir, uri)
                                 file.delete()
-                            }
-                    ) {
-                        Image(
-                            painter = rememberAsyncImagePainter("${Constants.saveDirectoryUri}$uri".toUri()),
-                            contentDescription = null
-                        )
-                    }
+                            },
+                        painter = rememberAsyncImagePainter("${Constants.saveDirectoryUri}$uri".toUri()),
+                        contentDescription = null
+                    )
                 }
+
+
             }
         }
         Row(
