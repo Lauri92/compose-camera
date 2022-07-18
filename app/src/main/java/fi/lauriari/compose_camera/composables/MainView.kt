@@ -3,7 +3,10 @@ package fi.lauriari.compose_camera.composables
 import android.content.Context
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -16,6 +19,7 @@ import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import fi.lauriari.compose_camera.util.Constants
 import java.io.File
+
 
 @Composable
 fun MainView(
@@ -50,14 +54,21 @@ fun MainView(
             ) {
                 val imageDir: File = context.getDir("imageDir", Context.MODE_PRIVATE).absoluteFile
 
-                for (file in imageDir.list()!!) {
-                    Image(
-                        painter = rememberAsyncImagePainter("${Constants.saveDirectoryUri}$file".toUri()),
-                        contentDescription = null,
+                for (uri in imageDir.list()!!) {
+                    Box(
                         modifier = Modifier
                             .size(250.dp)
                             .padding(20.dp)
-                    )
+                            .clickable {
+                                val file = File(imageDir, uri)
+                                file.delete()
+                            }
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter("${Constants.saveDirectoryUri}$uri".toUri()),
+                            contentDescription = null
+                        )
+                    }
                 }
             }
         }

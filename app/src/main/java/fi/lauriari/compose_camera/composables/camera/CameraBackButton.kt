@@ -1,5 +1,6 @@
 package fi.lauriari.compose_camera.composables.camera
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,9 @@ import androidx.compose.ui.unit.dp
 fun CameraBackButton(
     onBackPressed: () -> Unit
 ) {
+    BackHandler {
+        onBackPressed()
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()

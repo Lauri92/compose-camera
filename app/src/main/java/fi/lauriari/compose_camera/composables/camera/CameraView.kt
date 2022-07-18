@@ -26,7 +26,6 @@ fun CameraView(
     onError: (ImageCaptureException) -> Unit,
     onBackPressed: () -> Unit
 ) {
-    Log.d("cameratrace", "Before value change")
     // Which lens should be used
     var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
 
